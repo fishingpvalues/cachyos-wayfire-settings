@@ -1,5 +1,16 @@
 #!/bin/bash
 
+# Enhanced weather module with error handling
+log_error() {
+    echo "ERROR: $1" >&2
+}
+
+# Check if curl is available
+if ! command -v curl >/dev/null 2>&1; then
+    echo '{"text":"N/A", "alt":"curl not found", "tooltip":"curl command not available"}'
+    exit 0
+fi
+
 cachedir=~/.cache/rbn
 cachefile=${0##*/}-$1
 
@@ -18,10 +29,20 @@ IFS=$'\n'
 
 cacheage=$(($(date +%s) - $(stat -c '%Y' "$cachedir/$cachefile")))
 if [ $cacheage -gt 1740 ] || [ ! -s $cachedir/$cachefile ]; then
-    data=($(curl -s https://en.wttr.in/$1\?0qnT 2>&1))
-    echo ${data[0]} | cut -f1 -d, > $cachedir/$cachefile
-    echo ${data[1]} | sed -E 's/^.{15}//' >> $cachedir/$cachefile
-    echo ${data[2]} | sed -E 's/^.{15}//' >> $cachedir/$cachefile
+    # Enhanced error handling for weather data
+    if data=($(curl -s --max-time 10 --connect-timeout 5 https://en.wttr.in/$1\?0qnT 2>&1)); then
+        if [[ ${#data[@]} -ge 3 ]]; then
+            echo ${data[0]} | cut -f1 -d, > $cachedir/$cachefile
+            echo ${data[1]} | sed -E 's/^.{15}//' >> $cachedir/$cachefile
+            echo ${data[2]} | sed -E 's/^.{15}//' >> $cachedir/$cachefile
+        else
+            log_error "Insufficient weather data received"
+            exit 1
+        fi
+    else
+        log_error "Failed to fetch weather data"
+        exit 1
+    fi
 fi
 
 weather=($(cat $cachedir/$cachefile))

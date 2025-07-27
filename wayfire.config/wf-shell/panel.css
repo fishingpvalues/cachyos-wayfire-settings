@@ -1,0 +1,189 @@
+/* Modern Panel CSS for wf-shell */
+
+/* Panel container */
+#panel {
+    background: rgba(0, 0, 0, 0.8);
+    border-radius: 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    box-shadow: 0 2px 16px rgba(0, 0, 0, 0.2);
+    font-family: "Fira Sans", sans-serif;
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.9);
+}
+
+/* Panel widgets */
+#panel widget {
+    padding: 8px 12px;
+    margin: 0 2px;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+#panel widget:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Clock widget */
+#panel widget#clock {
+    background: rgba(91, 155, 213, 0.2);
+    border-color: rgba(91, 155, 213, 0.3);
+    font-weight: 500;
+}
+
+#panel widget#clock:hover {
+    background: rgba(91, 155, 213, 0.3);
+}
+
+/* Battery widget */
+#panel widget#battery {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+#panel widget#battery.charging {
+    background: rgba(76, 175, 80, 0.2);
+    border-color: rgba(76, 175, 80, 0.3);
+}
+
+#panel widget#battery.warning {
+    background: rgba(255, 152, 0, 0.2);
+    border-color: rgba(255, 152, 0, 0.3);
+}
+
+#panel widget#battery.critical {
+    background: rgba(244, 67, 54, 0.2);
+    border-color: rgba(244, 67, 54, 0.3);
+    animation: pulse 2s infinite;
+}
+
+/* Volume widget */
+#panel widget#volume {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+#panel widget#volume.muted {
+    background: rgba(158, 158, 158, 0.2);
+    border-color: rgba(158, 158, 158, 0.3);
+}
+
+/* Network widget */
+#panel widget#network {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+#panel widget#network.connected {
+    background: rgba(76, 175, 80, 0.2);
+    border-color: rgba(76, 175, 80, 0.3);
+}
+
+#panel widget#network.disconnected {
+    background: rgba(244, 67, 54, 0.2);
+    border-color: rgba(244, 67, 54, 0.3);
+}
+
+/* Window list */
+#panel widget#window-list {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 8px;
+    padding: 6px 10px;
+}
+
+#panel widget#window-list window {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 6px;
+    padding: 4px 8px;
+    margin: 0 2px;
+    transition: all 0.2s ease;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+#panel widget#window-list window:hover {
+    background: rgba(255, 255, 255, 0.15);
+    border-color: rgba(255, 255, 255, 0.1);
+}
+
+#panel widget#window-list window.focused {
+    background: rgba(91, 155, 213, 0.3);
+    border-color: rgba(91, 155, 213, 0.5);
+}
+
+/* Launchers */
+#panel widget#launchers {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 8px;
+    padding: 6px 10px;
+}
+
+#panel widget#launchers launcher {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 6px;
+    padding: 4px 8px;
+    margin: 0 2px;
+    transition: all 0.2s ease;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+#panel widget#launchers launcher:hover {
+    background: rgba(255, 255, 255, 0.15);
+    transform: scale(1.05);
+}
+
+#panel widget#launchers launcher.running {
+    background: rgba(91, 155, 213, 0.2);
+    border-color: rgba(91, 155, 213, 0.3);
+}
+
+/* Animations */
+@keyframes pulse {
+    0% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.7;
+    }
+    100% {
+        opacity: 1;
+    }
+}
+
+@keyframes panel-appear {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+#panel {
+    animation: panel-appear 0.3s ease-out;
+}
+
+/* Responsive design */
+@media (max-width: 1366px) {
+    #panel {
+        font-size: 11px;
+    }
+    
+    #panel widget {
+        padding: 6px 10px;
+        margin: 0 1px;
+    }
+}
+
+@media (min-width: 1920px) {
+    #panel {
+        font-size: 13px;
+    }
+    
+    #panel widget {
+        padding: 10px 14px;
+        margin: 0 3px;
+    }
+} 

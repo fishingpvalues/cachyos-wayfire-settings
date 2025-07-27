@@ -1,0 +1,525 @@
+@keyframes blink-warning {
+    70% {
+        color: @light;
+    }
+
+    to {
+        color: @light;
+        background-color: @warning;
+    }
+}
+
+@keyframes blink-critical {
+    70% {
+      color: @light;
+    }
+
+    to {
+        color: @light;
+        background-color: @critical;
+    }
+}
+
+@keyframes fade-in {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* COLORS - Modern Nord theme with enhancements */
+@define-color bg rgba(46, 52, 64, 0.9);
+@define-color light #D8DEE9;
+@define-color warning #ebcb8b;
+@define-color critical #BF616A;
+@define-color mode #434C5E;
+@define-color workspacesfocused #4C566A;
+@define-color tray #4C566A;
+@define-color sound #EBCB8B;
+@define-color network #5D7096;
+@define-color memory #546484;
+@define-color cpu #596A8D;
+@define-color temp #4D5C78;
+@define-color layout #5e81ac;
+@define-color battery #88c0d0;
+@define-color date #434C5E;
+@define-color time #434C5E;
+@define-color backlight #434C5E;
+@define-color nord_bg #434C5E;
+@define-color nord_bg_blue #546484;
+@define-color nord_light #D8DEE9;
+@define-color nord_light_font #D8DEE9;
+@define-color nord_dark_font #434C5E;
+
+/* Enhanced accent colors */
+@define-color accent #5B9BD5;
+@define-color accent_hover #4A90E2;
+@define-color success #A3BE8C;
+@define-color warning_soft #EBCB8B;
+@define-color error #BF616A;
+
+/* Reset all styles */
+* {
+    border: none;
+    border-radius: 8px;
+    min-height: 0;
+    margin: 2px 4px;
+    font-family: "FiraCode Nerd Font", "Font Awesome 6 Free", sans-serif;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+/* The whole bar */
+#waybar {
+    background: @bg;
+    color: @light;
+    font-family: "FiraCode Nerd Font", "Font Awesome 6 Free", sans-serif;
+    font-size: 12px;
+    font-weight: 500;
+    border-radius: 12px;
+    margin: 8px;
+    padding: 0;
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+    animation: fade-in 0.3s ease-out;
+}
+
+/* Each module */
+#battery,
+#clock,
+#cpu,
+#custom-layout,
+#memory,
+#mode,
+#network,
+#pulseaudio,
+#temperature,
+#custom-alsa,
+#custom-pacman,
+#custom-weather,
+#custom-gpu,
+#tray,
+#backlight,
+#language,
+#custom-cpugovernor,
+#workspaces,
+#custom-rofi,
+#custom-terminal,
+#custom-firefox,
+#custom-editor {
+    padding: 6px 12px;
+    margin: 2px 4px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 8px;
+    transition: all 0.2s ease;
+}
+
+#battery:hover,
+#clock:hover,
+#cpu:hover,
+#custom-layout:hover,
+#memory:hover,
+#mode:hover,
+#network:hover,
+#pulseaudio:hover,
+#temperature:hover,
+#custom-alsa:hover,
+#custom-pacman:hover,
+#custom-weather:hover,
+#custom-gpu:hover,
+#tray:hover,
+#backlight:hover,
+#language:hover,
+#custom-cpugovernor:hover,
+#workspaces:hover,
+#custom-rofi:hover,
+#custom-terminal:hover,
+#custom-firefox:hover,
+#custom-editor:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.1);
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* Each module that should blink */
+#mode,
+#memory,
+#temperature,
+#battery {
+    animation-timing-function: linear;
+    animation-iteration-count: infinite;
+    animation-direction: alternate;
+}
+
+/* Each critical module */
+#memory.critical,
+#cpu.critical,
+#temperature.critical,
+#battery.critical {
+    color: @critical;
+    background: rgba(191, 97, 106, 0.2);
+    border-color: rgba(191, 97, 106, 0.3);
+}
+
+/* Each critical that should blink */
+#mode,
+#memory.critical,
+#temperature.critical,
+#battery.critical.discharging {
+    animation-name: blink-critical;
+    animation-duration: 2s;
+}
+
+/* Each warning */
+#network.disconnected,
+#memory.warning,
+#cpu.warning,
+#temperature.warning,
+#battery.warning {
+    background: rgba(235, 203, 139, 0.2);
+    color: @nord_dark_font;
+    border-color: rgba(235, 203, 139, 0.3);
+}
+
+/* Each warning that should blink */
+#battery.warning.discharging {
+    animation-name: blink-warning;
+    animation-duration: 3s;
+}
+
+/* And now modules themselves in their respective order */
+
+#mode {
+    color: @light;
+    background: rgba(67, 76, 94, 0.8);
+    font-weight: 600;
+}
+
+/* Workspaces stuff */
+#workspaces {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 8px;
+    padding: 4px 8px;
+}
+
+#workspaces button {
+    font-weight: 600;
+    padding: 4px 8px;
+    opacity: 0.6;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 6px;
+    transition: all 0.2s ease;
+    font-size: 14px;
+}
+
+#workspaces button:hover {
+    opacity: 0.8;
+    background: rgba(255, 255, 255, 0.1);
+    transform: scale(1.05);
+}
+
+#workspaces button.focused {
+    background: rgba(91, 155, 213, 0.3);
+    color: #D8DEE9;
+    opacity: 1;
+    border-color: rgba(91, 155, 213, 0.5);
+    box-shadow: 0 2px 8px rgba(91, 155, 213, 0.3);
+}
+
+#workspaces button.urgent {
+    border-color: @critical;
+    color: @critical;
+    opacity: 1;
+    background: rgba(191, 97, 106, 0.2);
+}
+
+#window {
+    margin-right: 40px;
+    margin-left: 40px;
+    font-weight: normal;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 8px;
+    padding: 6px 12px;
+}
+
+#bluetooth {
+    background: rgba(84, 100, 132, 0.8);
+    font-size: 1.2em;
+    font-weight: 600;
+    padding: 6px 12px;
+}
+
+#custom-gpu {
+    background: rgba(67, 76, 94, 0.8);
+    font-weight: 600;
+    padding: 6px 12px;
+}
+
+#custom-weather {
+    background: rgba(67, 76, 94, 0.8);
+    font-weight: 600;
+    padding: 6px 12px;
+}
+
+#custom-pacman {
+    background: rgba(163, 190, 140, 0.8);
+    color: @nord_dark_font;
+    font-weight: 600;
+    padding: 6px 12px;
+}
+
+#custom-scratchpad-indicator {
+    background: rgba(163, 190, 140, 0.8);
+    color: @nord_dark_font;
+    font-weight: 600;
+    padding: 6px 12px;
+}
+
+#idle_inhibitor {
+    background: rgba(67, 76, 94, 0.8);
+    font-weight: 600;
+    padding: 6px 12px;
+}
+
+#custom-alsa {
+    background: rgba(235, 203, 139, 0.8);
+}
+
+#network {
+    background: rgba(84, 100, 132, 0.8);
+}
+
+#network.connected {
+    background: rgba(163, 190, 140, 0.8);
+    border-color: rgba(163, 190, 140, 0.5);
+}
+
+#network.disconnected {
+    background: rgba(191, 97, 106, 0.8);
+    border-color: rgba(191, 97, 106, 0.5);
+}
+
+#memory {
+    background: rgba(84, 100, 132, 0.8);
+}
+
+#cpu {
+    background: rgba(67, 76, 94, 0.8);
+    color: #D8DEE9;
+}
+
+#cpu.critical {
+    color: @nord_dark_font;
+    background: rgba(191, 97, 106, 0.8);
+}
+
+#language {
+    background: rgba(84, 100, 132, 0.8);
+    color: #D8DEE9;
+    padding: 6px 10px;
+}
+
+#custom-cpugovernor {
+    background-color: rgba(163, 190, 140, 0.8);
+    color: @nord_dark_font;
+}
+
+#custom-cpugovernor.perf {
+    background-color: rgba(235, 203, 139, 0.8);
+}
+
+#temperature {
+    background-color: rgba(67, 76, 94, 0.8);
+    color: #D8DEE9;
+}
+
+#temperature.critical {
+    background: rgba(191, 97, 106, 0.8);
+    color: @light;
+}
+
+#custom-layout {
+    background: rgba(94, 129, 172, 0.8);
+}
+
+#battery {
+    background: rgba(136, 192, 208, 0.8);
+}
+
+#battery.charging {
+    background: rgba(163, 190, 140, 0.8);
+    color: @nord_dark_font;
+}
+
+#battery.warning {
+    background: rgba(235, 203, 139, 0.8);
+    color: @nord_dark_font;
+}
+
+#battery.critical {
+    background: rgba(191, 97, 106, 0.8);
+    color: @light;
+}
+
+#backlight {
+    background: rgba(67, 76, 94, 0.8);
+}
+
+#clock {
+    background: rgba(84, 100, 132, 0.8);
+    color: #D8DEE9;
+    font-weight: 600;
+}
+
+#clock.date {
+    background: rgba(67, 76, 94, 0.8);
+}
+
+#clock.time {
+    background: rgba(67, 76, 94, 0.8);
+}
+
+#pulseaudio {
+    background: rgba(84, 100, 132, 0.8);
+    color: #D8DEE9;
+}
+
+#pulseaudio.muted {
+    background: rgba(191, 97, 106, 0.8);
+    color: @light;
+}
+
+#pulseaudio.source-muted {
+    background: rgba(208, 135, 112, 0.8);
+    color: #D8DEE9;
+}
+
+#tray {
+    background: rgba(67, 76, 94, 0.8);
+    padding: 6px 12px;
+}
+
+/* Custom modules */
+#custom-rofi,
+#custom-terminal,
+#custom-firefox,
+#custom-editor {
+    background: rgba(91, 155, 213, 0.2);
+    border-color: rgba(91, 155, 213, 0.3);
+    font-weight: 600;
+}
+
+#custom-rofi:hover,
+#custom-terminal:hover,
+#custom-firefox:hover,
+#custom-editor:hover {
+    background: rgba(91, 155, 213, 0.3);
+    border-color: rgba(91, 155, 213, 0.5);
+}
+
+#custom-media {
+    background: rgba(235, 203, 139, 0.2);
+    border-color: rgba(235, 203, 139, 0.3);
+}
+
+#custom-storage {
+    background: rgba(136, 192, 208, 0.2);
+    border-color: rgba(136, 192, 208, 0.3);
+}
+
+#custom-storage.warning {
+    background: rgba(235, 203, 139, 0.2);
+    border-color: rgba(235, 203, 139, 0.3);
+}
+
+#custom-storage.critical {
+    background: rgba(191, 97, 106, 0.2);
+    border-color: rgba(191, 97, 106, 0.3);
+}
+
+#custom-power {
+    background: rgba(191, 97, 106, 0.2);
+    border-color: rgba(191, 97, 106, 0.3);
+    font-weight: 600;
+}
+
+#custom-power:hover {
+    background: rgba(191, 97, 106, 0.3);
+    border-color: rgba(191, 97, 106, 0.5);
+}
+
+/* Responsive design */
+@media (max-width: 1366px) {
+    #waybar {
+        font-size: 11px;
+        margin: 6px;
+    }
+    
+    #battery,
+    #clock,
+    #cpu,
+    #custom-layout,
+    #memory,
+    #mode,
+    #network,
+    #pulseaudio,
+    #temperature,
+    #custom-alsa,
+    #custom-pacman,
+    #custom-weather,
+    #custom-gpu,
+    #tray,
+    #backlight,
+    #language,
+    #custom-cpugovernor,
+    #workspaces,
+    #custom-rofi,
+    #custom-terminal,
+    #custom-firefox,
+    #custom-editor {
+        padding: 4px 8px;
+        margin: 1px 2px;
+    }
+}
+
+@media (min-width: 1920px) {
+    #waybar {
+        font-size: 13px;
+        margin: 10px;
+    }
+    
+    #battery,
+    #clock,
+    #cpu,
+    #custom-layout,
+    #memory,
+    #mode,
+    #network,
+    #pulseaudio,
+    #temperature,
+    #custom-alsa,
+    #custom-pacman,
+    #custom-weather,
+    #custom-gpu,
+    #tray,
+    #backlight,
+    #language,
+    #custom-cpugovernor,
+    #workspaces,
+    #custom-rofi,
+    #custom-terminal,
+    #custom-firefox,
+    #custom-editor {
+        padding: 8px 16px;
+        margin: 3px 6px;
+    }
+}
