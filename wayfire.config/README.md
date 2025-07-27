@@ -20,43 +20,70 @@ A state-of-the-art Wayfire configuration with Mac-style aesthetics, vim-friendly
 
 ## 📦 Installation
 
-### Prerequisites
+### Option 1: Full Installation (Recommended)
+
+For a complete installation including all packages:
 
 ```bash
-# Install required packages on CachyOS/Arch
+# Clone or download this repository
+git clone <repository-url>
+cd cachyos-wayfire-settings
+
+# Run the full installation script
+./wayfire.config/install.sh
+```
+
+This script will:
+
+- ✅ Install all required packages
+- ✅ Copy configuration files
+- ✅ Set up environment variables
+- ✅ Create desktop entries
+- ✅ Perform security checks
+- ✅ Create comprehensive backups
+
+### Option 2: Quick Installation
+
+If you already have the required packages installed:
+
+```bash
+# Run the quick installation script
+./wayfire.config/quick-install.sh
+```
+
+This script will:
+
+- ✅ Copy configuration files only
+- ✅ Set up environment variables
+- ✅ Create desktop entries
+- ✅ Perform security checks
+
+### Option 3: Manual Installation
+
+For advanced users who prefer manual installation:
+
+```bash
+# Install required packages
 sudo pacman -S wayfire wayfire-plugins-extra wf-shell waybar wofi wezterm nvim thunar
 sudo pacman -S mako swaylock swayidle kanshi clipman grim slurp
 sudo pacman -S pamixer brightnessctl playerctl
 sudo pacman -S fira-code-nerd-font noto-fonts-emoji capitaine-cursors
 sudo pacman -S gtk-layer-shell libnotify
 
-# Optional but recommended
+# Optional but recommended packages
 sudo pacman -S cachy-browser spotify discord telegram-desktop
 sudo pacman -S btop htop neofetch fastfetch
 sudo pacman -S timeshift-gtk blueberry pavucontrol-qt
+
+# Copy configuration files
+cp -r wayfire.config/* ~/.config/
+
+# Make scripts executable
+chmod +x ~/.config/waybar/waybar.sh
+chmod +x ~/.config/waybar/modules/*.sh
+chmod +x ~/.config/waybar/mediaplayer.py
+chmod +x ~/.config/security-check.sh
 ```
-
-### Configuration Setup
-
-1. **Copy the configuration files**:
-
-   ```bash
-   cp -r wayfire.config/* ~/.config/
-   ```
-
-2. **Make scripts executable**:
-
-   ```bash
-   chmod +x ~/.config/waybar/waybar.sh
-   chmod +x ~/.config/waybar/modules/*.sh
-   chmod +x ~/.config/waybar/mediaplayer.py
-   ```
-
-3. **Install Font Awesome icons** (if not already installed):
-
-   ```bash
-   sudo pacman -S ttf-font-awesome
-   ```
 
 ### Recent Bug Fixes Applied
 
@@ -308,6 +335,34 @@ The WezTerm configuration includes:
 
 ## 🔧 Troubleshooting
 
+### Built-in Tools
+
+This configuration includes several built-in tools for troubleshooting:
+
+1. **Enhanced Test Script**:
+
+   ```bash
+   ~/test-wayfire-enhanced.sh
+   ```
+
+   Comprehensive test of all components with detailed reporting.
+
+2. **Security Check Script**:
+
+   ```bash
+   ~/.config/security-check.sh
+   ```
+
+   Checks for security issues, compatibility problems, and performance issues.
+
+3. **Installation Log**:
+
+   ```bash
+   cat ~/.cache/wayfire-install.log
+   ```
+
+   Detailed log of the installation process.
+
 ### Common Issues
 
 1. **Waybar not showing**:
@@ -333,6 +388,10 @@ The WezTerm configuration includes:
    - Disable animations if needed
    - Use a lighter theme
 
+6. **Version compatibility issues**:
+   - Run: `~/.config/security-check.sh`
+   - Check for Wayfire/wlroots version conflicts
+
 ### Logs and Debugging
 
 ```bash
@@ -347,39 +406,58 @@ wezterm --log-level debug
 
 # Check Wayfire plugins
 wayfire-config-manager
+
+# Installation logs
+cat ~/.cache/wayfire-install.log
+
+# Autostart logs
+cat ~/.cache/wayfire-autostart.log
 ```
 
 ## 📁 File Structure
 
 ```
-~/.config/
-├── wayfire.ini              # Main Wayfire configuration
-├── wf-shell.ini             # Shell configuration
+wayfire.config/
+├── install.sh               # Full installation script (packages + config)
+├── quick-install.sh         # Quick installation script (config only)
+├── security-check.sh        # Security and compatibility checker
+├── BUG_FIXES.md            # Comprehensive bug fixes documentation
+├── README.md               # This documentation
+├── SOTA_FEATURES.md        # Detailed features documentation
+├── wayfire.ini             # Main Wayfire configuration
+├── wf-shell.ini            # Shell configuration
 ├── wf-shell/
-│   ├── dock.css             # Dock styling
-│   └── panel.css            # Panel styling
+│   ├── dock.css            # Dock styling
+│   └── panel.css           # Panel styling
 ├── waybar/
-│   ├── config               # Waybar configuration
-│   ├── style.css            # Waybar styling
-│   ├── waybar.sh            # Waybar launcher script
-│   ├── mediaplayer.py       # Media player module
-│   └── modules/             # Custom modules
-│       ├── storage.sh       # Storage monitoring
-│       ├── weather.sh       # Weather information
-│       └── spotify.sh       # Spotify integration
+│   ├── config              # Waybar configuration
+│   ├── style.css           # Waybar styling
+│   ├── waybar.sh           # Waybar launcher script
+│   ├── mediaplayer.py      # Media player module
+│   └── modules/            # Custom modules
+│       ├── storage.sh      # Storage monitoring
+│       ├── weather.sh      # Weather information
+│       └── spotify.sh      # Spotify integration
 ├── wezterm/
-│   ├── wezterm.lua          # WezTerm configuration
+│   ├── wezterm.lua         # WezTerm configuration
 │   └── colors/
-│       └── github-dark.lua  # GitHub Dark theme
+│       └── github-dark.lua # GitHub Dark theme
 ├── wofi/
-│   ├── config               # Application launcher config
-│   └── style.css            # Launcher styling
-├── mako/                    # Notification daemon
-├── swaylock/                # Screen locker
-├── gtk-3.0/                 # GTK3 theme settings
-├── gtk-4.0/                 # GTK4 theme settings
-└── qt5ct/                   # Qt theme settings
+│   ├── config              # Application launcher config
+│   └── style.css           # Launcher styling
+├── mako/                   # Notification daemon
+├── swaylock/               # Screen locker
+├── gtk-3.0/                # GTK3 theme settings
+├── gtk-4.0/                # GTK4 theme settings
+└── qt5ct/                  # Qt theme settings
 ```
+
+### Scripts Overview
+
+- **`install.sh`**: Complete installation with package management, comprehensive error handling, and progress tracking
+- **`quick-install.sh`**: Fast configuration-only installation for users with existing packages
+- **`security-check.sh`**: Comprehensive security, compatibility, and performance analysis
+- **`test-wayfire-enhanced.sh`**: Generated test script for system validation (created during installation)
 
 ## 🎯 Performance Tips
 

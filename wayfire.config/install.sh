@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# 🚀 SOTA Wayfire Configuration Installer for CachyOS (Enhanced v2.1)
+# 🚀 SOTA Wayfire Configuration Installer for CachyOS (Enhanced v2.2)
 # This script installs all necessary packages and configurations with comprehensive error handling
 
 set -euo pipefail  # Enhanced error handling
@@ -14,29 +14,45 @@ PURPLE='\033[0;35m'
 CYAN='\033[0;36m'
 NC='\033[0m' # No Color
 
+# Configuration
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+CONFIG_DIR="$HOME/.config"
+BACKUP_DIR="$CONFIG_DIR/wayfire.backup.$(date +%Y%m%d_%H%M%S)"
+LOG_FILE="$HOME/.cache/wayfire-install.log"
+
 # Logging functions
 log_info() {
-    echo -e "${BLUE}[INFO]${NC} $1"
+    echo -e "${BLUE}[INFO]${NC} $1" | tee -a "$LOG_FILE"
 }
 
 log_success() {
-    echo -e "${GREEN}[SUCCESS]${NC} $1"
+    echo -e "${GREEN}[SUCCESS]${NC} $1" | tee -a "$LOG_FILE"
 }
 
 log_warning() {
-    echo -e "${YELLOW}[WARNING]${NC} $1"
+    echo -e "${YELLOW}[WARNING]${NC} $1" | tee -a "$LOG_FILE"
 }
 
 log_error() {
-    echo -e "${RED}[ERROR]${NC} $1"
+    echo -e "${RED}[ERROR]${NC} $1" | tee -a "$LOG_FILE"
 }
 
 log_critical() {
-    echo -e "${PURPLE}[CRITICAL]${NC} $1"
+    echo -e "${PURPLE}[CRITICAL]${NC} $1" | tee -a "$LOG_FILE"
 }
 
 log_debug() {
-    echo -e "${CYAN}[DEBUG]${NC} $1"
+    echo -e "${CYAN}[DEBUG]${NC} $1" | tee -a "$LOG_FILE"
+}
+
+# Progress tracking
+PROGRESS=0
+TOTAL_STEPS=12
+
+update_progress() {
+    ((PROGRESS++))
+    local percentage=$((PROGRESS * 100 / TOTAL_STEPS))
+    echo -e "${BLUE}[PROGRESS]${NC} Step $PROGRESS/$TOTAL_STEPS ($percentage%)"
 }
 
 # Error handling function
@@ -44,14 +60,24 @@ handle_error() {
     local exit_code=$?
     local line_number=$1
     log_error "Error occurred in line $line_number (exit code: $exit_code)"
-    log_error "Please check the error and try again"
+    log_error "Check the log file: $LOG_FILE"
     exit $exit_code
 }
 
 # Set error trap
 trap 'handle_error $LINENO' ERR
 
-# Security check function
+# Initialize logging
+init_logging() {
+    mkdir -p "$(dirname "$LOG_FILE")"
+    echo "=== SOTA Wayfire Installation Log - $(date) ===" > "$LOG_FILE"
+    log_info "Installation started"
+}
+
+# =============================================================================
+# PRE-INSTALLATION CHECKS
+# =============================================================================
+
 security_check() {
     log_info "Performing security checks..."
     
@@ -72,9 +98,29 @@ security_check() {
     fi
     
     log_success "Security checks passed"
+    update_progress
 }
 
-# Version compatibility check
+check_arch_system() {
+    log_info "Checking system compatibility..."
+    
+    if ! command -v pacman &> /dev/null; then
+        log_error "This script is designed for Arch-based systems (CachyOS, Arch Linux, etc.)"
+        log_error "Detected package manager: $(command -v apt-get 2>/dev/null || command -v dnf 2>/dev/null || command -v zypper 2>/dev/null || echo "unknown")"
+        exit 1
+    fi
+    
+    # Check if it's actually CachyOS
+    if [[ -f "/etc/os-release" ]] && grep -q "CachyOS" /etc/os-release; then
+        log_success "CachyOS detected - optimal compatibility"
+    else
+        log_warning "Not CachyOS - some optimizations may not apply"
+    fi
+    
+    log_success "System compatibility check passed"
+    update_progress
+}
+
 check_version_compatibility() {
     log_info "Checking version compatibility..."
     
@@ -112,9 +158,9 @@ check_version_compatibility() {
     fi
     
     log_success "Version compatibility check completed"
+    update_progress
 }
 
-# Dependency check function
 check_dependencies() {
     log_info "Checking system dependencies..."
     
@@ -143,37 +189,19 @@ check_dependencies() {
     fi
     
     log_success "All critical dependencies found"
+    update_progress
 }
 
-# Check if we're on an Arch-based system
-check_arch_system() {
-    log_info "Checking system compatibility..."
-    
-    if ! command -v pacman &> /dev/null; then
-        log_error "This script is designed for Arch-based systems (CachyOS, Arch Linux, etc.)"
-        log_error "Detected package manager: $(command -v apt-get 2>/dev/null || command -v dnf 2>/dev/null || command -v zypper 2>/dev/null || echo "unknown")"
-        exit 1
-    fi
-    
-    # Check if it's actually CachyOS
-    if [[ -f "/etc/os-release" ]] && grep -q "CachyOS" /etc/os-release; then
-        log_success "CachyOS detected - optimal compatibility"
-    else
-        log_warning "Not CachyOS - some optimizations may not apply"
-    fi
-    
-    log_success "System compatibility check passed"
-}
+# =============================================================================
+# BACKUP AND PREPARATION
+# =============================================================================
 
-# Backup function
 create_backup() {
     log_info "Creating backup of existing configuration..."
     
-    local backup_dir="$HOME/.config/wayfire.backup.$(date +%Y%m%d_%H%M%S)"
-    
-    if [[ -d "$HOME/.config/wayfire" ]]; then
-        if cp -r "$HOME/.config/wayfire" "$backup_dir"; then
-            log_success "Backup created: $backup_dir"
+    if [[ -d "$CONFIG_DIR/wayfire" ]]; then
+        if cp -r "$CONFIG_DIR/wayfire" "$BACKUP_DIR"; then
+            log_success "Backup created: $BACKUP_DIR"
         else
             log_error "Failed to create backup"
             exit 1
@@ -185,16 +213,44 @@ create_backup() {
     # Backup other relevant configs
     local configs_to_backup=("wayfire.ini" "wf-shell.ini" "waybar" "wezterm" "wofi")
     for config in "${configs_to_backup[@]}"; do
-        if [[ -e "$HOME/.config/$config" ]]; then
-            local config_backup="$HOME/.config/${config}.backup.$(date +%Y%m%d_%H%M%S)"
-            if cp -r "$HOME/.config/$config" "$config_backup"; then
+        if [[ -e "$CONFIG_DIR/$config" ]]; then
+            local config_backup="$CONFIG_DIR/${config}.backup.$(date +%Y%m%d_%H%M%S)"
+            if cp -r "$CONFIG_DIR/$config" "$config_backup"; then
                 log_info "Backed up: $config"
             fi
         fi
     done
+    
+    update_progress
 }
 
-# Install packages with error handling
+create_directories() {
+    log_info "Creating necessary directories..."
+    
+    local directories=(
+        "$CONFIG_DIR/wezterm/colors"
+        "$HOME/.cache/waybar"
+        "$HOME/.cache/rbn"
+        "$HOME/Pictures/screenshots"
+        "$HOME/.local/share/applications"
+        "$HOME/.config/autostart"
+    )
+    
+    for dir in "${directories[@]}"; do
+        if mkdir -p "$dir"; then
+            log_info "Created directory: $dir"
+        else
+            log_warning "Failed to create directory: $dir"
+        fi
+    done
+    
+    update_progress
+}
+
+# =============================================================================
+# PACKAGE INSTALLATION
+# =============================================================================
+
 install_packages() {
     log_info "Installing required packages..."
     
@@ -205,7 +261,7 @@ install_packages() {
         exit 1
     fi
     
-    # Core Wayfire packages
+    # Package groups
     local core_packages=(
         "wayfire"
         "wayfire-plugins-extra"
@@ -217,7 +273,6 @@ install_packages() {
         "thunar"
     )
     
-    # System utilities
     local system_packages=(
         "mako"
         "swaylock"
@@ -231,7 +286,6 @@ install_packages() {
         "playerctl"
     )
     
-    # Fonts and themes
     local font_packages=(
         "fira-code-nerd-font"
         "noto-fonts-emoji"
@@ -239,7 +293,6 @@ install_packages() {
         "ttf-font-awesome"
     )
     
-    # Additional dependencies
     local deps_packages=(
         "gtk-layer-shell"
         "libnotify"
@@ -247,7 +300,6 @@ install_packages() {
         "python-requests"
     )
     
-    # Optional but recommended packages
     local optional_packages=(
         "cachy-browser"
         "spotify"
@@ -279,37 +331,42 @@ install_packages() {
     fi
     
     log_success "All packages installed successfully!"
+    update_progress
 }
 
-# Copy configuration files with validation
+# =============================================================================
+# CONFIGURATION INSTALLATION
+# =============================================================================
+
 copy_configurations() {
     log_info "Copying configuration files..."
     
     # Validate source directory
-    if [[ ! -d "wayfire.config" ]]; then
-        log_error "wayfire.config directory not found"
+    if [[ ! -d "$SCRIPT_DIR" ]]; then
+        log_error "Script directory not found: $SCRIPT_DIR"
         exit 1
     fi
     
     # Copy with error handling
-    if ! cp -r wayfire.config/* "$HOME/.config/"; then
+    if ! cp -r "$SCRIPT_DIR"/* "$CONFIG_DIR/"; then
         log_error "Failed to copy configuration files"
         exit 1
     fi
     
     log_success "Configuration files copied successfully"
+    update_progress
 }
 
-# Make scripts executable with security checks
 make_executable() {
     log_info "Making scripts executable..."
     
     local scripts=(
-        "$HOME/.config/waybar/waybar.sh"
-        "$HOME/.config/waybar/modules/storage.sh"
-        "$HOME/.config/waybar/modules/weather.sh"
-        "$HOME/.config/waybar/modules/spotify.sh"
-        "$HOME/.config/waybar/mediaplayer.py"
+        "$CONFIG_DIR/waybar/waybar.sh"
+        "$CONFIG_DIR/waybar/modules/storage.sh"
+        "$CONFIG_DIR/waybar/modules/weather.sh"
+        "$CONFIG_DIR/waybar/modules/spotify.sh"
+        "$CONFIG_DIR/waybar/mediaplayer.py"
+        "$CONFIG_DIR/security-check.sh"
     )
     
     for script in "${scripts[@]}"; do
@@ -323,30 +380,14 @@ make_executable() {
             log_warning "Script not found: $(basename "$script")"
         fi
     done
+    
+    update_progress
 }
 
-# Create necessary directories
-create_directories() {
-    log_info "Creating necessary directories..."
-    
-    local directories=(
-        "$HOME/.cache/waybar"
-        "$HOME/.cache/rbn"
-        "$HOME/Pictures/screenshots"
-        "$HOME/.local/share/applications"
-        "$HOME/.config/autostart"
-    )
-    
-    for dir in "${directories[@]}"; do
-        if mkdir -p "$dir"; then
-            log_info "Created directory: $dir"
-        else
-            log_warning "Failed to create directory: $dir"
-        fi
-    done
-}
+# =============================================================================
+# ENVIRONMENT SETUP
+# =============================================================================
 
-# Set up environment variables
 setup_environment() {
     log_info "Setting up environment variables..."
     
@@ -374,9 +415,10 @@ setup_environment() {
         add_env_var "$zshrc" "WAYLAND_DISPLAY" "wayland-1"
         add_env_var "$zshrc" "XDG_CURRENT_DESKTOP" "Wayfire"
     fi
+    
+    update_progress
 }
 
-# Create desktop entry for Wayfire
 create_desktop_entry() {
     log_info "Creating desktop entry for Wayfire..."
     
@@ -397,9 +439,10 @@ EOF
     else
         log_error "Failed to create desktop entry"
     fi
+    
+    update_progress
 }
 
-# Set up autostart with enhanced error handling
 setup_autostart() {
     log_info "Setting up autostart..."
     
@@ -437,9 +480,14 @@ EOF
     else
         log_error "Failed to create autostart script"
     fi
+    
+    update_progress
 }
 
-# Install additional fonts if needed
+# =============================================================================
+# POST-INSTALLATION SETUP
+# =============================================================================
+
 install_fonts() {
     log_info "Installing additional fonts..."
     
@@ -458,9 +506,10 @@ install_fonts() {
             log_warning "Failed to refresh font cache"
         fi
     fi
+    
+    update_progress
 }
 
-# Set up GTK theme
 setup_gtk_theme() {
     log_info "Setting up GTK theme..."
     
@@ -470,9 +519,10 @@ setup_gtk_theme() {
             log_warning "Failed to install CachyOS Nord theme"
         fi
     fi
+    
+    update_progress
 }
 
-# Configure display manager
 configure_display_manager() {
     log_info "Configuring display manager..."
     
@@ -491,9 +541,10 @@ configure_display_manager() {
             log_warning "No display manager detected. You may need to start Wayfire manually."
         fi
     fi
+    
+    update_progress
 }
 
-# Create comprehensive test script
 create_test_script() {
     log_info "Creating comprehensive test script..."
     
@@ -659,36 +710,14 @@ EOF
 
     chmod +x "$HOME/test-wayfire-enhanced.sh"
     log_success "Enhanced test script created: ~/test-wayfire-enhanced.sh"
+    update_progress
 }
 
-# Main installation function
-main() {
-    echo ""
-    echo "=========================================="
-    echo "🚀 SOTA Wayfire Configuration Installer"
-    echo "Enhanced v2.1 - CachyOS Optimized"
-    echo "=========================================="
-    echo ""
-    
-    # Run all checks and installations
-    security_check
-    check_arch_system
-    check_version_compatibility
-    check_dependencies
-    create_backup
-    install_packages
-    copy_configurations
-    make_executable
-    create_directories
-    setup_environment
-    create_desktop_entry
-    setup_autostart
-    install_fonts
-    setup_gtk_theme
-    configure_display_manager
-    create_test_script
-    
-    # Final instructions
+# =============================================================================
+# FINALIZATION
+# =============================================================================
+
+show_final_instructions() {
     echo ""
     echo "=========================================="
     echo "🎉 SOTA Wayfire Configuration Installed!"
@@ -700,9 +729,10 @@ main() {
     echo ""
     echo "Next steps:"
     echo "1. Run: ~/test-wayfire-enhanced.sh"
-    echo "2. Log out of your current session"
-    echo "3. Select 'Wayfire' from your display manager"
-    echo "4. Log in to experience your new setup!"
+    echo "2. Run: ~/.config/security-check.sh"
+    echo "3. Log out of your current session"
+    echo "4. Select 'Wayfire' from your display manager"
+    echo "5. Log in to experience your new setup!"
     echo ""
     echo "Key features available:"
     echo "• Super + Enter: Open WezTerm terminal"
@@ -721,9 +751,11 @@ main() {
     echo "• Ctrl+Alt+F/G/O: Dynamic font/opacity cycling"
     echo ""
     echo "For troubleshooting, run: ~/test-wayfire-enhanced.sh"
+    echo "For security check, run: ~/.config/security-check.sh"
     echo ""
     echo "Configuration files are in: ~/.config/"
-    echo "Backup of old config: ~/.config/wayfire.backup.*"
+    echo "Backup of old config: $BACKUP_DIR"
+    echo "Installation log: $LOG_FILE"
     echo ""
     echo "⚠️  Emergency Recovery:"
     echo "• Safe Mode: wayfire --safe-mode"
@@ -732,6 +764,53 @@ main() {
     echo ""
     echo "Enjoy your SOTA Wayfire experience! 🚀"
     echo ""
+}
+
+# =============================================================================
+# MAIN INSTALLATION FUNCTION
+# =============================================================================
+
+main() {
+    echo ""
+    echo "=========================================="
+    echo "🚀 SOTA Wayfire Configuration Installer"
+    echo "Enhanced v2.2 - CachyOS Optimized"
+    echo "=========================================="
+    echo ""
+    
+    # Initialize logging
+    init_logging
+    
+    # Pre-installation checks
+    security_check
+    check_arch_system
+    check_version_compatibility
+    check_dependencies
+    
+    # Backup and preparation
+    create_backup
+    create_directories
+    
+    # Package installation
+    install_packages
+    
+    # Configuration installation
+    copy_configurations
+    make_executable
+    
+    # Environment setup
+    setup_environment
+    create_desktop_entry
+    setup_autostart
+    
+    # Post-installation setup
+    install_fonts
+    setup_gtk_theme
+    configure_display_manager
+    create_test_script
+    
+    # Final instructions
+    show_final_instructions
     
     # Ask if user wants to test the configuration
     read -p "Would you like to test the configuration now? (y/N): " -n 1 -r
@@ -741,7 +820,16 @@ main() {
         "$HOME/test-wayfire-enhanced.sh"
     fi
     
+    # Ask if user wants to run security check
+    read -p "Would you like to run security check now? (y/N): " -n 1 -r
+    echo
+    if [[ $REPLY =~ ^[Yy]$ ]]; then
+        log_info "Running security check..."
+        "$CONFIG_DIR/security-check.sh"
+    fi
+    
     log_success "Installation script completed successfully!"
+    log_info "Installation log saved to: $LOG_FILE"
 }
 
 # Run main function
